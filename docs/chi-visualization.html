@@ -79,6 +79,7 @@
             <button class="tab" id="tab-middlewares" onclick="switchTab('middlewares')">🔗 Middleware Chain</button>
             <button class="tab" id="tab-routes" onclick="switchTab('routes')">🛣️ Routes</button>
             <button class="tab" id="tab-hierarchy" onclick="switchTab('hierarchy')">🌳 Mux Hierarchy</button>
+            <button class="tab" id="tab-context" onclick="switchTab('context')">🔑 Context</button>
         </div>
         <div id="overview" class="tab-content active">
             <div class="alert purple"><h3>Your Social API</h3><p>Built with Wesfarmers one_http framework (wraps chi/v5)</p></div>
@@ -136,9 +137,69 @@ func ConfigRoute() one_http.Route {
         </div>
         <div id="hierarchy" class="tab-content">
             <div class="alert purple"><h3>Chi Router Hierarchy</h3><p>Your current setup uses a single root mux with no sub-routers</p></div>
-            <div class="card"><h2>Current Mux Structure</h2><div style="border: 2px solid #a78bfa; background: #faf5ff; padding: 20px; border-radius: 12px;"><h3 style="margin-bottom: 15px;">🌳 Root Mux (chi.Router)</h3><div style="background: white; padding: 15px; border-radius: 8px; margin-bottom: 15px;"><div style="font-size: 0.75rem; font-weight: 600; color: #6b7280; margin-bottom: 10px;">MIDDLEWARE CHAIN:</div><div style="display: flex; flex-wrap: wrap; gap: 8px;"><span style="background: #ffedd5; color: #7c2d12; padding: 6px 12px; border-radius: 4px; font-size: 0.75rem; border: 1px solid #fb923c;">1. Recoverer</span><span style="background: #ffedd5; color: #7c2d12; padding: 6px 12px; border-radius: 4px; font-size: 0.75rem; border: 1px solid #fb923c;">2. ddchi.Middleware</span><span style="background: #ffedd5; color: #7c2d12; padding: 6px 12px; border-radius: 4px; font-size: 0.75rem; border: 1px solid #fb923c;">3. Heartbeat</span><span style="background: #ffedd5; color: #7c2d12; padding: 6px 12px; border-radius: 4px; font-size: 0.75rem; border: 1px solid #fb923c;">4. CorrelationID</span><span style="background: #ffedd5; color: #7c2d12; padding: 6px 12px; border-radius: 4px; font-size: 0.75rem; border: 1px solid #fb923c;">5. HTTPLogger</span></div></div><div style="background: white; padding: 15px; border-radius: 8px;"><div style="font-size: 0.75rem; font-weight: 600; color: #6b7280; margin-bottom: 10px;">ROUTES:</div><div style="font-family: 'Courier New', monospace; font-size: 0.9rem; margin: 5px 0;"><span style="color: #15803d; font-weight: bold;">GET</span> /health/alive → Heartbeat</div><div style="font-family: 'Courier New', monospace; font-size: 0.9rem; margin: 5px 0;"><span style="color: #15803d; font-weight: bold;">GET</span> /example → api.Handler</div></div></div></div>
+            <div class="card"><h2>Current Mux Structure</h2><div style="border: 2px solid #a78bfa; background: #faf5ff; padding: 20px; border-radius: 12px;"><h3 style="margin-bottom: 15px;">🌳 Root Mux (chi.Router)</h3><div style="background: white; padding: 15px; border-radius: 8px; margin-bottom: 15px;"><div style="font-size: 0.75rem; font-weight: 600; color: #6b7280; margin-bottom: 10px;">MIDDLEWARE CHAIN:</div><div style="display: flex; flex-wrap: wrap; gap: 8px;"><span style="background: #ffedd5; color: #7c2d12; padding: 6px 12px; border-radius: 4px; font-size: 0.75rem; border: 1px solid #fb923c;">1. Recoverer</span><span style="background: #ffedd5; color: #7c2d12; padding: 6px 12px; border-radius: 4px; font-size: 0.75rem; border: 1px solid #fb923c;">2. ddchi.Middleware</span><span style="background: #ffedd5; color: #7c2d12; padding: 6px 12px; border-radius: 4px; font-size: 0.75rem; border: 1px solid #fb923c;">3. Heartbeat</span><span style="background: #ffedd5; color: #7c2d12; padding: 6px 12px; border-radius: 4px; font-size: 0.75rem; border: 1px solid #fb923c;">4. CorrelationID</span><span style="background: #ffedd5; color: #7c2d12; padding: 6px 12px; border-radius: 4px; font-size: 0.75rem; border: 1px solid #fb923c;">5. HTTPLogger</span></div></div><div style="background: white; padding: 15px; border-radius: 8px; margin-bottom: 15px;"><div style="font-size: 0.75rem; font-weight: 600; color: #6b7280; margin-bottom: 10px;">ROUTES:</div><div style="font-family: 'Courier New', monospace; font-size: 0.9rem; margin: 5px 0;"><span style="color: #15803d; font-weight: bold;">GET</span> /health/alive → Heartbeat</div><div style="font-family: 'Courier New', monospace; font-size: 0.9rem; margin: 5px 0;"><span style="color: #15803d; font-weight: bold;">GET</span> /example → api.Handler</div></div><div style="background: white; padding: 15px; border-radius: 8px;"><div style="font-size: 0.75rem; font-weight: 600; color: #6b7280; margin-bottom: 10px;">MIDDLEWARE MODULES:</div><div style="font-family: 'Courier New', monospace; font-size: 0.8rem; line-height: 2;"><div><span style="background: #dbeafe; color: #1e40af; padding: 2px 6px; border-radius: 3px;">1. Recoverer</span> <span style="color: #6b7280;">→</span> <span style="color: #2563eb;">github.com/go-chi/chi/v5/middleware</span></div><div><span style="background: #dbeafe; color: #1e40af; padding: 2px 6px; border-radius: 3px;">2. ddchi.Middleware</span> <span style="color: #6b7280;">→</span> <span style="color: #2563eb;">gopkg.in/DataDog/dd-trace-go.v1/contrib/go-chi/chi.v5</span></div><div><span style="background: #dbeafe; color: #1e40af; padding: 2px 6px; border-radius: 3px;">3. Heartbeat</span> <span style="color: #6b7280;">→</span> <span style="color: #2563eb;">github.com/go-chi/chi/v5/middleware</span></div><div><span style="background: #dbeafe; color: #1e40af; padding: 2px 6px; border-radius: 3px;">4. CorrelationID</span> <span style="color: #6b7280;">→</span> <span style="color: #2563eb;">github.com/Wesfarmers-Digital/pkg/one_http</span></div><div><span style="background: #dbeafe; color: #1e40af; padding: 2px 6px; border-radius: 3px;">5. HTTPLogger</span> <span style="color: #6b7280;">→</span> <span style="color: #2563eb;">github.com/Wesfarmers-Digital/pkg/one_http</span></div></div></div></div></div>
             <div class="card" style="background: #eff6ff; border: 1px solid #93c5fd;"><h2>Chi/v5 Router Concepts</h2><div class="grid-2"><div class="concept-box"><h4>🌳 Radix Tree</h4><p>Chi uses a radix tree for efficient route matching. Each mux has its own independent tree.</p></div><div class="concept-box"><h4>🔗 Middleware Chain</h4><p>Middlewares wrap handlers in order. Each request flows through the entire chain.</p></div><div class="concept-box"><h4>📦 Route Groups</h4><p>Use <code>r.Group()</code> to create isolated middleware stacks for specific routes.</p></div><div class="concept-box"><h4>🎯 Sub-Routers</h4><p>Mount sub-routers with <code>r.Mount("/api", apiRouter)</code> to create path prefixes.</p></div></div></div>
             <div class="card" style="background: #fffbeb; border: 1px solid #fde047;"><h3>💡 Potential Enhancements</h3><ul style="margin-left: 20px; color: #374151; line-height: 2;"><li>Create an <code>/api</code> sub-router to group business logic endpoints</li><li>Add an <code>/admin</code> router with auth middleware for admin operations</li><li>Use <code>r.Group()</code> for routes requiring authentication</li><li>Organize by resource: <code>/users</code>, <code>/posts</code>, etc.</li></ul></div>
+        </div>
+        <div id="context" class="tab-content">
+            <div class="alert purple"><h3>Request Context</h3><p>The <code>chi.Context</code> stored in <code>r.Context()</code> via <code>context.WithValue</code></p></div>
+            <div class="card"><h2>chi.Context Structure</h2>
+                <div style="border: 2px solid #a78bfa; background: #faf5ff; padding: 20px; border-radius: 12px;">
+                    <h3 style="margin-bottom: 15px;">🔑 context.Context(*context.valueCtx)</h3>
+                    <div style="margin-left: 10px; padding: 15px; background: #fef3c7; border-radius: 8px; border: 1px solid #fbbf24;">
+                        <div style="font-weight: bold; color: #92400e; margin-bottom: 12px; font-size: 1rem;">📦 valueCtx (Chi RouteContext)</div>
+                        <div style="font-family: 'Courier New', monospace; font-size: 0.85rem; line-height: 1.8;">
+                            <div><span style="color: #f97316; font-weight: bold;">key:</span> *chi.contextKey{name: "RouteContext"}</div>
+                            <div><span style="color: #f97316; font-weight: bold;">val:</span> *chi.Context</div>
+                        </div>
+                        <div style="margin-left: 15px; margin-top: 10px; padding: 15px; background: #fff; border-radius: 8px; border: 1px solid #e5e7eb;">
+                            <div style="font-family: 'Courier New', monospace; font-size: 0.85rem; line-height: 2;">
+                                <div><span style="color: #2563eb; font-weight: bold;">Routes:</span> chi.Routes(*chi.Mux) <span style="color: #6b7280; font-style: italic;">← the root router</span></div>
+                                <div><span style="color: #2563eb; font-weight: bold;">parentCtx:</span> context.Context(*context.cancelCtx) <span style="color: #6b7280; font-style: italic;">← server's base context</span></div>
+                                <div style="margin-top: 8px; padding-top: 8px; border-top: 1px dashed #e5e7eb;">
+                                    <span style="color: #15803d; font-weight: bold;">RoutePath:</span> <span style="background: #dcfce7; padding: 2px 6px; border-radius: 3px;">"/example"</span> <span style="color: #6b7280; font-style: italic;">← from r.URL.Path</span>
+                                </div>
+                                <div>
+                                    <span style="color: #15803d; font-weight: bold;">RouteMethod:</span> <span style="background: #dcfce7; padding: 2px 6px; border-radius: 3px;">"GET"</span> <span style="color: #6b7280; font-style: italic;">← from r.Method</span>
+                                </div>
+                                <div style="margin-top: 8px; padding-top: 8px; border-top: 1px dashed #e5e7eb;">
+                                    <span style="color: #7c3aed; font-weight: bold;">URLParams:</span> *chi.RouteParams <span style="color: #6b7280; font-style: italic;">← extracted path params (e.g., {id})</span>
+                                </div>
+                                <div><span style="color: #6b7280;">routeParams:</span> *chi.RouteParams <span style="color: #6b7280; font-style: italic;">← internal param storage</span></div>
+                                <div style="margin-top: 8px; padding-top: 8px; border-top: 1px dashed #e5e7eb;">
+                                    <span style="color: #dc2626; font-weight: bold;">routePattern:</span> <span style="background: #fee2e2; padding: 2px 6px; border-radius: 3px;">"/example"</span> <span style="color: #6b7280; font-style: italic;">← matched pattern</span>
+                                </div>
+                                <div><span style="color: #6b7280;">RoutePatterns:</span> []string <span style="color: #6b7280; font-style: italic;">← patterns from nested routers</span></div>
+                                <div style="margin-top: 8px; padding-top: 8px; border-top: 1px dashed #e5e7eb;">
+                                    <span style="color: #6b7280;">methodsAllowed:</span> []chi.methodTyp <span style="color: #6b7280; font-style: italic;">← for 405 responses</span>
+                                </div>
+                                <div><span style="color: #6b7280;">methodNotAllowed:</span> false</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div style="margin-left: 10px; margin-top: 15px; padding: 15px; background: #f3f4f6; border-radius: 8px;">
+                        <div style="font-weight: bold; color: #374151; margin-bottom: 10px;">🚫 cancelCtx (Parent Chain)</div>
+                        <div style="font-family: 'Courier New', monospace; font-size: 0.85rem; line-height: 1.8;">
+                            <div><span style="color: #2563eb; font-weight: bold;">Context:</span> context.Context(*context.cancelCtx) <span style="color: #6b7280; font-style: italic;">← HTTP server context</span></div>
+                            <div style="margin-left: 15px;">
+                                <div><span style="color: #6b7280;">mu:</span> (*sync.Mutex)(0x14000229be0)</div>
+                                <div><span style="color: #6b7280;">done:</span> (*"sync/atomic.Value")(0x14000229be8) <span style="color: #6b7280; font-style: italic;">← closed on cancel</span></div>
+                                <div><span style="color: #6b7280;">children:</span> map[context.canceler]struct {} nil</div>
+                                <div><span style="color: #16a34a;">err:</span> error nil <span style="color: #6b7280; font-style: italic;">← context.Canceled when done</span></div>
+                                <div><span style="color: #16a34a;">cause:</span> error nil</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="card" style="background: #eff6ff; border: 1px solid #93c5fd;"><h2>Request Context Concepts</h2>
+                <div class="grid-2">
+                    <div class="concept-box"><h4>� chi.Context</h4><p>Chi's route context stored via <code>context.WithValue</code>. Access with <code>chi.RouteContext(r.Context())</code>.</p></div>
+                    <div class="concept-box"><h4>🛣️ RoutePath/Method</h4><p>Populated from <code>r.URL.Path</code> and <code>r.Method</code> during routing. Used for pattern matching.</p></div>
+                    <div class="concept-box"><h4>🔑 URLParams</h4><p>Extracted path parameters (e.g., <code>/users/{id}</code>). Access via <code>chi.URLParam(r, "id")</code>.</p></div>
+                    <div class="concept-box"><h4>🚫 cancelCtx</h4><p>Parent cancellation context from HTTP server. Cancelled when client disconnects or request times out.</p></div>
+                </div>
+            </div>
         </div>
         <div class="footer"><p>Generated from <code>cmd/api-wd/main.go</code></p><p style="margin-top: 5px;">Repository: <a href="https://github.com/rissabekov-wes/social" target="_blank">rissabekov-wes/social</a></p></div>
     </div>
