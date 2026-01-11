@@ -1,0 +1,955 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Interactive API visualization for the Social service - Chi/v5 router with one_http framework">
+    <title>Social API Visualization - Chi/v5 Router</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 20px;
+            color: #333;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            overflow: hidden;
+        }
+
+        header {
+            background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            font-weight: 700;
+        }
+
+        header p {
+            font-size: 1.1em;
+            opacity: 0.9;
+        }
+
+        .tabs {
+            display: flex;
+            background: #f3f4f6;
+            border-bottom: 2px solid #e5e7eb;
+            overflow-x: auto;
+        }
+
+        .tab-button {
+            flex: 1;
+            padding: 15px 20px;
+            background: transparent;
+            border: none;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 600;
+            color: #6b7280;
+            transition: all 0.3s ease;
+            white-space: nowrap;
+        }
+
+        .tab-button:hover {
+            background: #e5e7eb;
+            color: #374151;
+        }
+
+        .tab-button.active {
+            background: white;
+            color: #1e3a8a;
+            border-bottom: 3px solid #3b82f6;
+        }
+
+        .tab-content {
+            display: none;
+            padding: 30px;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .card {
+            background: #f9fafb;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        .card h3 {
+            color: #1e3a8a;
+            margin-bottom: 15px;
+            font-size: 1.3em;
+            display: flex;
+            align-items: center;
+        }
+
+        .card h3::before {
+            content: "▸";
+            color: #3b82f6;
+            margin-right: 10px;
+            font-weight: bold;
+        }
+
+        .info-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 15px;
+            margin-top: 15px;
+        }
+
+        .info-item {
+            background: white;
+            padding: 15px;
+            border-radius: 6px;
+            border-left: 4px solid #3b82f6;
+        }
+
+        .info-item .label {
+            font-weight: 600;
+            color: #6b7280;
+            font-size: 0.9em;
+            margin-bottom: 5px;
+        }
+
+        .info-item .value {
+            font-size: 1.1em;
+            color: #1f2937;
+            font-weight: 500;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 0.85em;
+            font-weight: 600;
+            margin-left: 8px;
+        }
+
+        .badge.success {
+            background: #d1fae5;
+            color: #065f46;
+        }
+
+        .badge.danger {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+
+        .badge.info {
+            background: #dbeafe;
+            color: #1e40af;
+        }
+
+        .middleware-chain {
+            position: relative;
+            padding: 20px 0;
+        }
+
+        .middleware-item {
+            background: white;
+            border: 2px solid #3b82f6;
+            border-radius: 8px;
+            padding: 15px 20px;
+            margin: 10px 0;
+            position: relative;
+            transition: all 0.3s ease;
+        }
+
+        .middleware-item:hover {
+            transform: translateX(5px);
+            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+        }
+
+        .middleware-item::before {
+            content: attr(data-order);
+            position: absolute;
+            left: -30px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 30px;
+            height: 30px;
+            background: #3b82f6;
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 0.9em;
+        }
+
+        .middleware-item::after {
+            content: "↓";
+            position: absolute;
+            left: -15px;
+            bottom: -20px;
+            color: #3b82f6;
+            font-size: 1.5em;
+            font-weight: bold;
+        }
+
+        .middleware-item:last-child::after {
+            content: none;
+        }
+
+        .middleware-name {
+            font-weight: 600;
+            color: #1e3a8a;
+            font-size: 1.1em;
+            margin-bottom: 5px;
+        }
+
+        .middleware-desc {
+            color: #6b7280;
+            font-size: 0.95em;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background: white;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        thead {
+            background: #1e3a8a;
+            color: white;
+        }
+
+        th {
+            padding: 15px;
+            text-align: left;
+            font-weight: 600;
+            font-size: 0.95em;
+        }
+
+        td {
+            padding: 15px;
+            border-bottom: 1px solid #e5e7eb;
+        }
+
+        tbody tr:hover {
+            background: #f3f4f6;
+        }
+
+        .method-badge {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 4px;
+            font-weight: 600;
+            font-size: 0.85em;
+        }
+
+        .method-get {
+            background: #d1fae5;
+            color: #065f46;
+        }
+
+        .method-post {
+            background: #dbeafe;
+            color: #1e40af;
+        }
+
+        .method-put {
+            background: #fef3c7;
+            color: #92400e;
+        }
+
+        .method-delete {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+
+        code {
+            background: #1f2937;
+            color: #10b981;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+        }
+
+        pre {
+            background: #1f2937;
+            color: #e5e7eb;
+            padding: 20px;
+            border-radius: 8px;
+            overflow-x: auto;
+            margin: 15px 0;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+            line-height: 1.5;
+        }
+
+        pre code {
+            background: transparent;
+            color: inherit;
+            padding: 0;
+        }
+
+        .keyword {
+            color: #c792ea;
+        }
+
+        .string {
+            color: #c3e88d;
+        }
+
+        .function {
+            color: #82aaff;
+        }
+
+        .comment {
+            color: #546e7a;
+            font-style: italic;
+        }
+
+        .tree {
+            font-family: monospace;
+            background: #1f2937;
+            color: #10b981;
+            padding: 20px;
+            border-radius: 8px;
+            line-height: 1.8;
+            overflow-x: auto;
+        }
+
+        .tree-node {
+            padding-left: 20px;
+        }
+
+        .tree-root {
+            color: #fbbf24;
+            font-weight: bold;
+        }
+
+        .tree-middleware {
+            color: #60a5fa;
+        }
+
+        .tree-route {
+            color: #34d399;
+        }
+
+        .tree-handler {
+            color: #f87171;
+        }
+
+        .curl-command {
+            background: #1f2937;
+            color: #10b981;
+            padding: 15px;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            margin: 10px 0;
+            position: relative;
+            overflow-x: auto;
+        }
+
+        .curl-command::before {
+            content: "$";
+            color: #60a5fa;
+            margin-right: 8px;
+        }
+
+        .section-title {
+            color: #1e3a8a;
+            font-size: 1.5em;
+            margin: 30px 0 15px 0;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #e5e7eb;
+        }
+
+        .highlight {
+            background: #fef3c7;
+            padding: 2px 6px;
+            border-radius: 3px;
+        }
+
+        footer {
+            background: #f3f4f6;
+            padding: 20px;
+            text-align: center;
+            color: #6b7280;
+            font-size: 0.9em;
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 10px;
+            }
+
+            header h1 {
+                font-size: 1.8em;
+            }
+
+            .tab-button {
+                padding: 12px 15px;
+                font-size: 14px;
+            }
+
+            .tab-content {
+                padding: 20px;
+            }
+
+            .info-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .middleware-item::before {
+                left: -25px;
+                width: 25px;
+                height: 25px;
+                font-size: 0.8em;
+            }
+
+            table {
+                font-size: 0.9em;
+            }
+
+            th, td {
+                padding: 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🚀 Social API Visualization</h1>
+            <p>Interactive Chi/v5 Router Structure with one_http Framework</p>
+        </header>
+
+        <div class="tabs">
+            <button class="tab-button active" onclick="switchTab(event, 'overview')">📊 Overview</button>
+            <button class="tab-button" onclick="switchTab(event, 'middleware')">🔗 Middleware Chain</button>
+            <button class="tab-button" onclick="switchTab(event, 'routes')">🛣️ Routes</button>
+            <button class="tab-button" onclick="switchTab(event, 'hierarchy')">🌲 Mux Hierarchy</button>
+        </div>
+
+        <!-- Overview Tab -->
+        <div id="overview" class="tab-content active">
+            <div class="card">
+                <h3>Server Configuration</h3>
+                <div class="info-grid">
+                    <div class="info-item">
+                        <div class="label">Service Name</div>
+                        <div class="value">social</div>
+                    </div>
+                    <div class="info-item">
+                        <div class="label">Port</div>
+                        <div class="value">8081</div>
+                    </div>
+                    <div class="info-item">
+                        <div class="label">TLS Status</div>
+                        <div class="value">Disabled <span class="badge danger">HTTP</span></div>
+                    </div>
+                    <div class="info-item">
+                        <div class="label">Framework</div>
+                        <div class="value">one_http (Chi/v5)</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <h3>API Statistics</h3>
+                <div class="info-grid">
+                    <div class="info-item">
+                        <div class="label">Total Routes</div>
+                        <div class="value">2</div>
+                    </div>
+                    <div class="info-item">
+                        <div class="label">Middlewares</div>
+                        <div class="value">5</div>
+                    </div>
+                    <div class="info-item">
+                        <div class="label">HTTP Methods</div>
+                        <div class="value">GET</div>
+                    </div>
+                    <div class="info-item">
+                        <div class="label">Router Version</div>
+                        <div class="value">Chi v5.2.3</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <h3>Framework Information</h3>
+                <p style="margin-bottom: 15px;">
+                    This API is built using <strong>one_http</strong>, a Wesfarmers-developed wrapper around the popular 
+                    <strong>go-chi/chi/v5</strong> router. The one_http framework provides standardized middleware, 
+                    configuration, and routing patterns for Go APIs across Wesfarmers Digital.
+                </p>
+                <div class="info-grid">
+                    <div class="info-item">
+                        <div class="label">Base Router</div>
+                        <div class="value">go-chi/chi/v5</div>
+                    </div>
+                    <div class="info-item">
+                        <div class="label">Wrapper Framework</div>
+                        <div class="value">one_http</div>
+                    </div>
+                    <div class="info-item">
+                        <div class="label">Package Version</div>
+                        <div class="value">v1.88.1</div>
+                    </div>
+                    <div class="info-item">
+                        <div class="label">Default Middlewares</div>
+                        <div class="value">5 included</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <h3>Quick Start</h3>
+                <p style="margin-bottom: 15px;">Test the API endpoints with these curl commands:</p>
+                
+                <div style="margin-bottom: 20px;">
+                    <strong>Health Check Endpoint:</strong>
+                    <div class="curl-command">curl -X GET http://localhost:8081/health/alive</div>
+                </div>
+
+                <div>
+                    <strong>Example Endpoint:</strong>
+                    <div class="curl-command">curl -X GET http://localhost:8081/example</div>
+                </div>
+
+                <p style="margin-top: 15px; color: #6b7280; font-size: 0.95em;">
+                    <strong>Expected Response:</strong> Both endpoints return JSON with status information.
+                </p>
+            </div>
+        </div>
+
+        <!-- Middleware Chain Tab -->
+        <div id="middleware" class="tab-content">
+            <div class="card">
+                <h3>Middleware Execution Order</h3>
+                <p style="margin-bottom: 20px; color: #6b7280;">
+                    Middlewares are executed in the order shown below. Each request passes through all middlewares 
+                    before reaching the route handler. The response then travels back through the middleware chain 
+                    in reverse order.
+                </p>
+
+                <div class="middleware-chain" style="padding-left: 30px;">
+                    <div class="middleware-item" data-order="1">
+                        <div class="middleware-name">Recoverer</div>
+                        <div class="middleware-desc">
+                            Recovers from panics and returns a 500 Internal Server Error response. 
+                            Prevents the server from crashing on unexpected errors.
+                        </div>
+                    </div>
+
+                    <div class="middleware-item" data-order="2">
+                        <div class="middleware-name">ddchi.Middleware</div>
+                        <div class="middleware-desc">
+                            DataDog APM middleware for distributed tracing. Instruments requests with 
+                            traces and spans for monitoring and performance analysis.
+                        </div>
+                    </div>
+
+                    <div class="middleware-item" data-order="3">
+                        <div class="middleware-name">Heartbeat</div>
+                        <div class="middleware-desc">
+                            Responds to health check requests at <code>/health/alive</code>. 
+                            Returns 200 OK for liveness probes without hitting the main application logic.
+                        </div>
+                    </div>
+
+                    <div class="middleware-item" data-order="4">
+                        <div class="middleware-name">NewCorrelationIDMW</div>
+                        <div class="middleware-desc">
+                            Generates or extracts correlation IDs from request headers. 
+                            Enables request tracing across multiple services in distributed systems.
+                        </div>
+                    </div>
+
+                    <div class="middleware-item" data-order="5">
+                        <div class="middleware-name">NewHTTPLogger</div>
+                        <div class="middleware-desc">
+                            Logs HTTP request and response details including method, path, status code, 
+                            duration, and request IDs. Provides audit trail and debugging information.
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <h3>Middleware Flow Diagram</h3>
+                <pre>
+┌─────────────────────────────────────────────────────────────┐
+│                        Client Request                        │
+└─────────────────────────────────────────────────────────────┘
+                              │
+                              ▼
+                    ┌──────────────────┐
+                    │   1. Recoverer   │  ← Panic Recovery
+                    └──────────────────┘
+                              │
+                              ▼
+                    ┌──────────────────┐
+                    │ 2. ddchi.MW      │  ← DataDog Tracing
+                    └──────────────────┘
+                              │
+                              ▼
+                    ┌──────────────────┐
+                    │  3. Heartbeat    │  ← Health Checks
+                    └──────────────────┘
+                              │
+                              ▼
+                    ┌──────────────────┐
+                    │ 4. CorrelationID │  ← Request Tracing
+                    └──────────────────┘
+                              │
+                              ▼
+                    ┌──────────────────┐
+                    │  5. HTTPLogger   │  ← Request Logging
+                    └──────────────────┘
+                              │
+                              ▼
+                    ┌──────────────────┐
+                    │  Route Handler   │  ← Business Logic
+                    └──────────────────┘
+                              │
+                              ▼
+┌─────────────────────────────────────────────────────────────┐
+│                       Client Response                        │
+└─────────────────────────────────────────────────────────────┘
+</pre>
+            </div>
+
+            <div class="card">
+                <h3>Default Middleware Setup</h3>
+                <p style="margin-bottom: 15px;">
+                    These middlewares are automatically configured by the <code>one_http</code> framework's 
+                    <code>generateDefaultMiddlewares()</code> function. No manual setup required.
+                </p>
+                <pre><code><span class="comment">// Automatically applied by one_http.NewServer()</span>
+<span class="keyword">func</span> <span class="function">generateDefaultMiddlewares</span>() []<span class="function">func</span>(http.Handler) http.Handler {
+    <span class="keyword">return</span> []<span class="function">func</span>(http.Handler) http.Handler{
+        middleware.Recoverer,
+        ddchi.Middleware,
+        middleware.Heartbeat(<span class="string">"/health/alive"</span>),
+        NewCorrelationIDMW,
+        NewHTTPLogger,
+    }
+}</code></pre>
+            </div>
+        </div>
+
+        <!-- Routes Tab -->
+        <div id="routes" class="tab-content">
+            <div class="card">
+                <h3>Route Table</h3>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Method</th>
+                            <th>Path</th>
+                            <th>Handler</th>
+                            <th>Description</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><span class="method-badge method-get">GET</span></td>
+                            <td><code>/health/alive</code></td>
+                            <td>Heartbeat Middleware</td>
+                            <td>Health check endpoint for liveness probes</td>
+                        </tr>
+                        <tr>
+                            <td><span class="method-badge method-get">GET</span></td>
+                            <td><code>/example</code></td>
+                            <td>api.Handler</td>
+                            <td>Example endpoint returning JSON status</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="card">
+                <h3>Route Registration</h3>
+                <p style="margin-bottom: 15px;">
+                    Routes are registered in the main application file using the one_http framework:
+                </p>
+                <pre><code><span class="comment">// cmd/api-wd/main.go</span>
+<span class="keyword">package</span> main
+
+<span class="keyword">import</span> (
+    <span class="string">"github.com/Wesfarmers-Digital/pkg/one_http"</span>
+    <span class="string">"github.com/rissabekov-wes/social/internal/api"</span>
+    <span class="string">"github.com/rissabekov-wes/social/internal/config"</span>
+)
+
+<span class="keyword">func</span> <span class="function">main</span>() {
+    appConfig := config.NewApplicationConfig()
+
+    srv := one_http.NewServer(appConfig.ServiceName())
+    srv.DisableTLS = <span class="keyword">true</span>
+    srv.Port = appConfig.ServerPort()
+    srv.RegisterRoute(
+        api.ConfigRoute(),
+    )
+
+    srv.Start()
+}</code></pre>
+            </div>
+
+            <div class="card">
+                <h3>Handler Implementation</h3>
+                <p style="margin-bottom: 15px;">
+                    The <code>/example</code> endpoint handler from <code>internal/api/example.go</code>:
+                </p>
+                <pre><code><span class="comment">// internal/api/example.go</span>
+<span class="keyword">package</span> api
+
+<span class="keyword">import</span> (
+    <span class="string">"net/http"</span>
+    <span class="string">"github.com/Wesfarmers-Digital/pkg/one_http"</span>
+)
+
+<span class="keyword">const</span> (
+    httpMethod = <span class="string">"GET"</span>
+    httpPath   = <span class="string">"/example"</span>
+)
+
+<span class="keyword">func</span> <span class="function">Handler</span>(w http.ResponseWriter, r *http.Request) {
+    w.Header().Set(<span class="string">"Content-Type"</span>, <span class="string">"application/json"</span>)
+    w.WriteHeader(http.StatusOK)
+    w.Write([]<span class="keyword">byte</span>(<span class="string">`{"status":"ok"}`</span>))
+}
+
+<span class="keyword">func</span> <span class="function">ConfigRoute</span>() one_http.Route {
+    <span class="keyword">return</span> one_http.Route{
+        Method:  httpMethod,
+        Path:    httpPath,
+        Handler: http.HandlerFunc(Handler),
+    }
+}</code></pre>
+            </div>
+
+            <div class="card">
+                <h3>Testing Routes</h3>
+                <p style="margin-bottom: 15px;">Example curl commands to test each route:</p>
+
+                <div style="margin-bottom: 20px;">
+                    <strong>1. Health Check (Liveness Probe):</strong>
+                    <div class="curl-command">curl -v http://localhost:8081/health/alive</div>
+                    <pre style="margin-top: 10px;"><code><span class="comment">// Expected Response:</span>
+HTTP/1.1 200 OK
+Content-Type: text/plain
+Date: Sat, 11 Jan 2025 06:00:00 GMT
+Content-Length: 1
+
+.</code></pre>
+                </div>
+
+                <div style="margin-bottom: 20px;">
+                    <strong>2. Example Endpoint:</strong>
+                    <div class="curl-command">curl -v http://localhost:8081/example</div>
+                    <pre style="margin-top: 10px;"><code><span class="comment">// Expected Response:</span>
+HTTP/1.1 200 OK
+Content-Type: application/json
+Date: Sat, 11 Jan 2025 06:00:00 GMT
+Content-Length: 15
+
+{"status":"ok"}</code></pre>
+                </div>
+
+                <div>
+                    <strong>3. With Correlation ID Header:</strong>
+                    <div class="curl-command">curl -H "X-Correlation-ID: test-123" http://localhost:8081/example</div>
+                    <p style="margin-top: 10px; color: #6b7280; font-size: 0.95em;">
+                        The correlation ID will be propagated through the request and logged by the HTTPLogger middleware.
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Mux Hierarchy Tab -->
+        <div id="hierarchy" class="tab-content">
+            <div class="card">
+                <h3>Router Hierarchy</h3>
+                <p style="margin-bottom: 15px;">
+                    Visualization of the complete Chi router structure with middlewares and routes:
+                </p>
+                <div class="tree">
+<span class="tree-root">chi.Mux (Root Router)</span>
+<span class="tree-middleware">├── Middleware: Recoverer</span>
+<span class="tree-middleware">├── Middleware: ddchi.Middleware</span>
+<span class="tree-middleware">├── Middleware: Heartbeat("/health/alive")</span>
+<span class="tree-middleware">├── Middleware: NewCorrelationIDMW</span>
+<span class="tree-middleware">├── Middleware: NewHTTPLogger</span>
+<span class="tree-route">└── Routes:</span>
+    <span class="tree-route">├── GET /health/alive</span>
+    <span class="tree-route">│   └── Handler: <span class="tree-handler">Heartbeat (middleware)</span></span>
+    <span class="tree-route">└── GET /example</span>
+        <span class="tree-route">└── Handler: <span class="tree-handler">api.Handler</span></span>
+                </div>
+            </div>
+
+            <div class="card">
+                <h3>Request Flow</h3>
+                <p style="margin-bottom: 15px;">
+                    Step-by-step execution flow for a request to <code>GET /example</code>:
+                </p>
+                <pre>
+1. Request arrives at server: GET /example
+   ↓
+2. Recoverer middleware: Wraps handler with panic recovery
+   ↓
+3. ddchi.Middleware: Creates DataDog trace span
+   ↓
+4. Heartbeat: Checks if path is /health/alive (no match, continue)
+   ↓
+5. NewCorrelationIDMW: Extracts or generates correlation ID
+   ↓
+6. NewHTTPLogger: Logs request start with correlation ID
+   ↓
+7. Router matches: GET /example → api.Handler
+   ↓
+8. api.Handler executes:
+   - Sets Content-Type: application/json
+   - Writes status 200 OK
+   - Writes body: {"status":"ok"}
+   ↓
+9. Response passes back through middlewares (reverse order):
+   - NewHTTPLogger: Logs response status and duration
+   - NewCorrelationIDMW: Adds correlation ID to response headers
+   - Heartbeat: No action on response
+   - ddchi.Middleware: Closes DataDog trace span
+   - Recoverer: No action if no panic
+   ↓
+10. Response sent to client
+                </pre>
+            </div>
+
+            <div class="card">
+                <h3>Chi Router Concepts</h3>
+                <div style="margin-bottom: 20px;">
+                    <h4 style="color: #1e3a8a; margin-bottom: 10px;">🔹 Middleware Chain</h4>
+                    <p style="color: #6b7280; margin-bottom: 15px;">
+                        Chi uses a simple middleware pattern where each middleware is a function that takes an 
+                        <code>http.Handler</code> and returns an <code>http.Handler</code>. Middlewares wrap 
+                        handlers in layers, like Russian nesting dolls.
+                    </p>
+
+                    <h4 style="color: #1e3a8a; margin-bottom: 10px;">🔹 Route Matching</h4>
+                    <p style="color: #6b7280; margin-bottom: 15px;">
+                        Chi uses a radix tree for efficient route matching. Routes are matched based on the HTTP 
+                        method and path pattern. Exact matches take precedence over pattern matches.
+                    </p>
+
+                    <h4 style="color: #1e3a8a; margin-bottom: 10px;">🔹 Context Values</h4>
+                    <p style="color: #6b7280; margin-bottom: 15px;">
+                        Chi middlewares commonly use <code>context.Context</code> to pass values between middleware 
+                        layers and handlers. This is how correlation IDs, user info, and other request-scoped data 
+                        is shared.
+                    </p>
+
+                    <h4 style="color: #1e3a8a; margin-bottom: 10px;">🔹 Handler Composition</h4>
+                    <p style="color: #6b7280;">
+                        The <code>one_http</code> framework wraps Chi's router and provides standardized middleware, 
+                        configuration management, and route registration patterns used across Wesfarmers APIs.
+                    </p>
+                </div>
+            </div>
+
+            <div class="card">
+                <h3>Server Initialization</h3>
+                <p style="margin-bottom: 15px;">
+                    How the one_http server initializes with Chi under the hood:
+                </p>
+                <pre><code><span class="comment">// Simplified one_http.NewServer implementation</span>
+<span class="keyword">func</span> <span class="function">NewServer</span>(serviceName <span class="keyword">string</span>) *Server {
+    router := chi.NewRouter()
+    
+    <span class="comment">// Apply default middlewares</span>
+    middlewares := generateDefaultMiddlewares()
+    <span class="keyword">for</span> _, mw := <span class="keyword">range</span> middlewares {
+        router.Use(mw)
+    }
+    
+    <span class="keyword">return</span> &Server{
+        Router:      router,
+        ServiceName: serviceName,
+        Port:        8080,
+        DisableTLS:  <span class="keyword">false</span>,
+    }
+}
+
+<span class="comment">// RegisterRoute adds a route to the Chi router</span>
+<span class="keyword">func</span> (s *Server) <span class="function">RegisterRoute</span>(routes ...Route) {
+    <span class="keyword">for</span> _, route := <span class="keyword">range</span> routes {
+        s.Router.Method(route.Method, route.Path, route.Handler)
+    }
+}</code></pre>
+            </div>
+        </div>
+
+        <footer>
+            <p><strong>Social API</strong> - Built with Chi/v5 Router via one_http Framework</p>
+            <p style="margin-top: 10px;">
+                This visualization serves as the reference implementation for the automated API visualization tool.
+                See <a href="./API_VISUALIZATION_PLAN.md" style="color: #3b82f6; text-decoration: none;">API_VISUALIZATION_PLAN.md</a> for the automation roadmap.
+            </p>
+        </footer>
+    </div>
+
+    <script>
+        function switchTab(event, tabName) {
+            // Hide all tab contents
+            const tabContents = document.getElementsByClassName('tab-content');
+            for (let i = 0; i < tabContents.length; i++) {
+                tabContents[i].classList.remove('active');
+            }
+
+            // Remove active class from all buttons
+            const tabButtons = document.getElementsByClassName('tab-button');
+            for (let i = 0; i < tabButtons.length; i++) {
+                tabButtons[i].classList.remove('active');
+            }
+
+            // Show the selected tab content
+            document.getElementById(tabName).classList.add('active');
+
+            // Add active class to the clicked button
+            event.currentTarget.classList.add('active');
+        }
+    </script>
+</body>
+</html>
