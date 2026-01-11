@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Social API - Chi Router Visualization</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif; background-color: #f9fafb; padding: 20px; }
+        .container { max-width: 1200px; margin: 0 auto; }
+        .header { margin-bottom: 30px; }
+        .header h1 { font-size: 2rem; margin-bottom: 10px; color: #1f2937; }
+        .header p { color: #6b7280; }
+        .tabs { display: flex; gap: 10px; margin-bottom: 30px; flex-wrap: wrap; }
+        .tab { padding: 12px 24px; background: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; color: #6b7280; transition: all 0.2s; font-size: 1rem; }
+        .tab:hover { background: #f3f4f6; }
+        .tab.active { background: #3b82f6; color: white; }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+        .card { background: white; border-radius: 12px; padding: 24px; margin-bottom: 20px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+        .card h2 { font-size: 1.5rem; margin-bottom: 20px; color: #1f2937; }
+        .card h3 { font-size: 1.2rem; margin-bottom: 15px; color: #374151; }
+        .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 20px; }
+        .stat-box { padding: 20px; border-radius: 8px; border: 2px solid; }
+        .stat-box.purple { background: linear-gradient(to bottom right, #faf5ff, #f3e8ff); border-color: #d8b4fe; }
+        .stat-box.blue { background: linear-gradient(to bottom right, #eff6ff, #dbeafe); border-color: #93c5fd; }
+        .stat-box.red { background: linear-gradient(to bottom right, #fef2f2, #fee2e2); border-color: #fca5a5; }
+        .stat-box.green { background: linear-gradient(to bottom right, #f0fdf4, #dcfce7); border-color: #86efac; }
+        .stat-label { font-size: 0.75rem; font-weight: 600; margin-bottom: 5px; text-transform: uppercase; }
+        .stat-value { font-size: 1rem; font-weight: bold; font-family: 'Courier New', monospace; }
+        .middleware-item { background: linear-gradient(to right, #fff7ed, #ffedd5); border-left: 4px solid #fb923c; padding: 20px; margin-bottom: 15px; border-radius: 8px; display: flex; gap: 15px; }
+        .middleware-number { width: 40px; height: 40px; background: linear-gradient(to bottom right, #f97316, #ea580c); color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; flex-shrink: 0; }
+        .middleware-content { flex: 1; }
+        .middleware-name { font-family: 'Courier New', monospace; font-weight: bold; margin-bottom: 5px; color: #7c2d12; }
+        .middleware-purpose { color: #374151; font-size: 0.9rem; margin-bottom: 8px; }
+        .middleware-pkg { font-size: 0.75rem; color: #6b7280; margin-bottom: 8px; }
+        .middleware-config { background: white; padding: 10px; border-radius: 4px; margin-top: 8px; border: 1px solid #e5e7eb; }
+        .middleware-config div { font-size: 0.75rem; font-family: 'Courier New', monospace; color: #6b7280; margin: 3px 0; }
+        .route-item { border: 2px solid #e5e7eb; border-radius: 8px; padding: 15px; margin-bottom: 15px; transition: all 0.2s; }
+        .route-item:hover { border-color: #3b82f6; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+        .route-header { display: flex; align-items: center; gap: 15px; margin-bottom: 10px; flex-wrap: wrap; }
+        .route-method { font-family: 'Courier New', monospace; font-weight: bold; padding: 6px 12px; border-radius: 4px; font-size: 1rem; }
+        .route-method.get { background: #dcfce7; color: #15803d; }
+        .route-path { font-family: 'Courier New', monospace; background: #f3f4f6; padding: 6px 12px; border-radius: 4px; font-weight: 600; font-size: 1rem; }
+        .route-type { font-size: 0.75rem; padding: 4px 8px; border-radius: 4px; margin-left: auto; }
+        .route-type.builtin { background: #dbeafe; color: #1e40af; }
+        .route-type.custom { background: #dcfce7; color: #15803d; }
+        .route-details { margin-left: 15px; font-size: 0.9rem; color: #6b7280; }
+        .route-details div { margin: 5px 0; }
+        .route-details code { background: #f3f4f6; padding: 2px 6px; border-radius: 3px; font-size: 0.85rem; }
+        pre { background: #1f2937; color: #f3f4f6; padding: 20px; border-radius: 8px; overflow-x: auto; font-size: 0.875rem; line-height: 1.6; }
+        code { font-family: 'Courier New', monospace; }
+        .alert { padding: 15px 20px; border-radius: 8px; margin-bottom: 20px; border-left: 4px solid; }
+        .alert.purple { background: linear-gradient(to right, #faf5ff, #f3e8ff); border-color: #a855f7; }
+        .alert.orange { background: linear-gradient(to right, #fff7ed, #ffedd5); border-color: #fb923c; }
+        .alert.green { background: linear-gradient(to right, #f0fdf4, #dcfce7); border-color: #22c55e; }
+        .alert h3 { margin-bottom: 5px; font-size: 1rem; }
+        .alert p { font-size: 0.9rem; color: #374151; }
+        .grid-2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; }
+        .big-stat { text-align: center; }
+        .big-stat-value { font-size: 3rem; font-weight: bold; color: #f97316; }
+        .big-stat-label { color: #6b7280; margin-top: 5px; }
+        .concept-box { background: white; padding: 15px; border-radius: 8px; }
+        .concept-box h4 { margin-bottom: 10px; color: #2563eb; }
+        .concept-box p { font-size: 0.9rem; color: #374151; line-height: 1.5; }
+        .footer { text-align: center; margin-top: 40px; padding: 20px; background: #f3f4f6; border-radius: 8px; color: #6b7280; font-size: 0.9rem; }
+        .footer a { color: #3b82f6; text-decoration: none; }
+        .footer a:hover { text-decoration: underline; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🚀 Social API - Chi Router Visualization</h1>
+            <p>Real structure from <code>rissabekov-wes/social</code></p>
+        </div>
+        <div class="tabs">
+            <button class="tab active" id="tab-overview" onclick="switchTab('overview')">📊 Overview</button>
+            <button class="tab" id="tab-middlewares" onclick="switchTab('middlewares')">🔗 Middleware Chain</button>
+            <button class="tab" id="tab-routes" onclick="switchTab('routes')">🛣️ Routes</button>
+            <button class="tab" id="tab-hierarchy" onclick="switchTab('hierarchy')">🌳 Mux Hierarchy</button>
+        </div>
+        <div id="overview" class="tab-content active">
+            <div class="alert purple"><h3>Your Social API</h3><p>Built with Wesfarmers one_http framework (wraps chi/v5)</p></div>
+            <div class="card"><h2>⚙️ Server Configuration</h2><div class="grid"><div class="stat-box purple"><div class="stat-label" style="color: #7c3aed;">Service Name</div><div class="stat-value">social</div></div><div class="stat-box blue"><div class="stat-label" style="color: #2563eb;">Port</div><div class="stat-value">8081</div></div><div class="stat-box red"><div class="stat-label" style="color: #dc2626;">TLS</div><div class="stat-value">Disabled ⚠️</div></div><div class="stat-box green"><div class="stat-label" style="color: #16a34a;">Framework</div><div class="stat-value" style="font-size: 0.8rem;">one_http + chi/v5</div></div></div></div>
+            <div class="grid-2"><div class="card"><div class="big-stat"><div class="big-stat-value">5</div><div class="big-stat-label">Default middlewares applied</div></div></div><div class="card"><div class="big-stat"><div class="big-stat-value" style="color: #22c55e;">2</div><div class="big-stat-label">Routes registered (1 health + 1 custom)</div></div></div></div>
+            <div class="card"><h2>📝 Source Code (cmd/api-wd/main.go)</h2><pre>package main
+
+import (
+    "github.com/Wesfarmers-Digital/pkg/one_http"
+    "github.com/rissabekov-wes/social/internal/api"
+    "github.com/rissabekov-wes/social/internal/config"
+)
+
+func main() {
+    appConfig := config.NewApplicationConfig()
+    srv := one_http.NewServer(appConfig.ServiceName())
+    srv.DisableTLS = true
+    srv.Port = appConfig.ServerPort()
+    srv.RegisterRoute(api.ConfigRoute())
+    srv.Start()
+}</pre></div>
+        </div>
+        <div id="middlewares" class="tab-content">
+            <div class="alert orange"><h3>Middleware Execution Chain</h3><p>Middlewares execute in order from top to bottom, wrapping the final handler</p></div>
+            <div class="card"><h2>Default Middleware Stack</h2>
+                <div class="middleware-item"><div class="middleware-number">1</div><div class="middleware-content"><div class="middleware-name">middleware.Recoverer</div><div class="middleware-purpose">Panic recovery - catches panics and returns 500</div><div class="middleware-pkg"><strong>Package:</strong> go-chi/chi/v5/middleware</div></div></div>
+                <div class="middleware-item"><div class="middleware-number">2</div><div class="middleware-content"><div class="middleware-name">ddchi.Middleware</div><div class="middleware-purpose">DataDog APM tracing</div><div class="middleware-pkg"><strong>Package:</strong> gopkg.in/DataDog/dd-trace-go.v1/contrib/go-chi/chi.v5</div><div class="middleware-config"><div>• ServiceName: "social"</div><div>• Analytics: enabled</div><div>• WithIgnoreRequest: skip health paths</div></div></div></div>
+                <div class="middleware-item"><div class="middleware-number">3</div><div class="middleware-content"><div class="middleware-name">middleware.Heartbeat("/health/alive")</div><div class="middleware-purpose">Health check endpoint - responds with 200 OK</div><div class="middleware-pkg"><strong>Package:</strong> go-chi/chi/v5/middleware</div></div></div>
+                <div class="middleware-item"><div class="middleware-number">4</div><div class="middleware-content"><div class="middleware-name">NewCorrelationIDMW()</div><div class="middleware-purpose">Generates or reads X-Correlation-ID header for request tracking</div><div class="middleware-pkg"><strong>Package:</strong> Wesfarmers-Digital/pkg/one_http</div></div></div>
+                <div class="middleware-item"><div class="middleware-number">5</div><div class="middleware-content"><div class="middleware-name">NewHTTPLogger()</div><div class="middleware-purpose">Logs HTTP request/response metadata</div><div class="middleware-pkg"><strong>Package:</strong> Wesfarmers-Digital/pkg/one_http</div><div class="middleware-config"><div>• Logs: method, URL, status, duration</div><div>• Skips: /health/alive, /health/deep</div></div></div></div>
+            </div>
+        </div>
+        <div id="routes" class="tab-content">
+            <div class="alert green"><h3>Registered Routes</h3><p>All routes registered via <code>srv.RegisterRoute()</code></p></div>
+            <div class="card"><h2>Route Table</h2>
+                <div class="route-item"><div class="route-header"><div class="route-method get">GET</div><div class="route-path">/health/alive</div><div class="route-type builtin">built-in</div></div><div class="route-details"><div><strong>Handler:</strong> <code>middleware.Heartbeat</code></div><div><strong>Response:</strong> <code>200 OK</code></div></div></div>
+                <div class="route-item"><div class="route-header"><div class="route-method get">GET</div><div class="route-path">/example</div><div class="route-type custom">custom</div></div><div class="route-details"><div><strong>Handler:</strong> <code>api.Handler</code></div><div><strong>File:</strong> <code>internal/api/example.go</code></div><div><strong>Response:</strong> <code>{"status":"ok"}</code></div></div></div>
+            </div>
+            <div class="grid-2"><div class="card"><h3>Handler Code</h3><pre style="font-size: 0.75rem;">// internal/api/example.go
+func Handler(w http.ResponseWriter, r *http.Request) {
+    w.Header().Set("Content-Type", "application/json")
+    w.WriteHeader(http.StatusOK)
+    w.Write([]byte(`{"status":"ok"}`))
+}
+
+func ConfigRoute() one_http.Route {
+    return one_http.Route{
+        Method: "GET",
+        Path: "/example",
+        Handler: http.HandlerFunc(Handler),
+    }
+}</pre></div>
+                <div class="card"><h3>Try It Out</h3><div style="margin-bottom: 15px;"><div style="font-size: 0.75rem; font-weight: 600; color: #6b7280; margin-bottom: 5px;">Health Check:</div><pre style="font-size: 0.85rem; padding: 10px;">curl http://localhost:8081/health/alive</pre></div><div style="margin-bottom: 15px;"><div style="font-size: 0.75rem; font-weight: 600; color: #6b7280; margin-bottom: 5px;">Example Endpoint:</div><pre style="font-size: 0.85rem; padding: 10px;">curl http://localhost:8081/example</pre></div><div style="background: #dcfce7; padding: 15px; border-radius: 8px; border: 1px solid #86efac;"><div style="font-size: 0.75rem; font-weight: 600; color: #15803d; margin-bottom: 5px;">Expected Response:</div><code style="color: #15803d;">{"status":"ok"}</code></div></div>
+            </div>
+        </div>
+        <div id="hierarchy" class="tab-content">
+            <div class="alert purple"><h3>Chi Router Hierarchy</h3><p>Your current setup uses a single root mux with no sub-routers</p></div>
+            <div class="card"><h2>Current Mux Structure</h2><div style="border: 2px solid #a78bfa; background: #faf5ff; padding: 20px; border-radius: 12px;"><h3 style="margin-bottom: 15px;">🌳 Root Mux (chi.Router)</h3><div style="background: white; padding: 15px; border-radius: 8px; margin-bottom: 15px;"><div style="font-size: 0.75rem; font-weight: 600; color: #6b7280; margin-bottom: 10px;">MIDDLEWARE CHAIN:</div><div style="display: flex; flex-wrap: wrap; gap: 8px;"><span style="background: #ffedd5; color: #7c2d12; padding: 6px 12px; border-radius: 4px; font-size: 0.75rem; border: 1px solid #fb923c;">1. Recoverer</span><span style="background: #ffedd5; color: #7c2d12; padding: 6px 12px; border-radius: 4px; font-size: 0.75rem; border: 1px solid #fb923c;">2. ddchi.Middleware</span><span style="background: #ffedd5; color: #7c2d12; padding: 6px 12px; border-radius: 4px; font-size: 0.75rem; border: 1px solid #fb923c;">3. Heartbeat</span><span style="background: #ffedd5; color: #7c2d12; padding: 6px 12px; border-radius: 4px; font-size: 0.75rem; border: 1px solid #fb923c;">4. CorrelationID</span><span style="background: #ffedd5; color: #7c2d12; padding: 6px 12px; border-radius: 4px; font-size: 0.75rem; border: 1px solid #fb923c;">5. HTTPLogger</span></div></div><div style="background: white; padding: 15px; border-radius: 8px;"><div style="font-size: 0.75rem; font-weight: 600; color: #6b7280; margin-bottom: 10px;">ROUTES:</div><div style="font-family: 'Courier New', monospace; font-size: 0.9rem; margin: 5px 0;"><span style="color: #15803d; font-weight: bold;">GET</span> /health/alive → Heartbeat</div><div style="font-family: 'Courier New', monospace; font-size: 0.9rem; margin: 5px 0;"><span style="color: #15803d; font-weight: bold;">GET</span> /example → api.Handler</div></div></div></div>
+            <div class="card" style="background: #eff6ff; border: 1px solid #93c5fd;"><h2>Chi/v5 Router Concepts</h2><div class="grid-2"><div class="concept-box"><h4>🌳 Radix Tree</h4><p>Chi uses a radix tree for efficient route matching. Each mux has its own independent tree.</p></div><div class="concept-box"><h4>🔗 Middleware Chain</h4><p>Middlewares wrap handlers in order. Each request flows through the entire chain.</p></div><div class="concept-box"><h4>📦 Route Groups</h4><p>Use <code>r.Group()</code> to create isolated middleware stacks for specific routes.</p></div><div class="concept-box"><h4>🎯 Sub-Routers</h4><p>Mount sub-routers with <code>r.Mount("/api", apiRouter)</code> to create path prefixes.</p></div></div></div>
+            <div class="card" style="background: #fffbeb; border: 1px solid #fde047;"><h3>💡 Potential Enhancements</h3><ul style="margin-left: 20px; color: #374151; line-height: 2;"><li>Create an <code>/api</code> sub-router to group business logic endpoints</li><li>Add an <code>/admin</code> router with auth middleware for admin operations</li><li>Use <code>r.Group()</code> for routes requiring authentication</li><li>Organize by resource: <code>/users</code>, <code>/posts</code>, etc.</li></ul></div>
+        </div>
+        <div class="footer"><p>Generated from <code>cmd/api-wd/main.go</code></p><p style="margin-top: 5px;">Repository: <a href="https://github.com/rissabekov-wes/social" target="_blank">rissabekov-wes/social</a></p></div>
+    </div>
+    <script>
+        function switchTab(tabName) {
+            var tabs = document.querySelectorAll('.tab');
+            for (var i = 0; i < tabs.length; i++) { tabs[i].classList.remove('active'); }
+            document.getElementById('tab-' + tabName).classList.add('active');
+            var contents = document.querySelectorAll('.tab-content');
+            for (var i = 0; i < contents.length; i++) { contents[i].classList.remove('active'); }
+            document.getElementById(tabName).classList.add('active');
+        }
+    </script>
+</body>
+</html>
